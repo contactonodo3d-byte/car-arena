@@ -37,45 +37,64 @@ try {
   }
   for(let i=0;i<8;i++){mesh(0xda9b34,-23+i*6,.035,-24,2,.05,.4);}
   const entities=new Map<number,THREE.Object3D>();
-  function car(color:number){const group=new THREE.Group();mesh(color,0,.65,0,1.7,.7,2.7,group);mesh(0x182b36,0,1.2,-.2,1.3,.6,1.3,group);mesh(0xe8e5ca,0,1.1,1.25,.25,.25,1.3,group);for(const x of [-.95,.95])for(const z of [-.8,.8])mesh(0x13191c,x,.4,z,.4,.65,.65,group);scene.add(group);return group;}
+  function car(color:number){const group=new THREE.Group();mesh(color,0,.65,0,1.7,.7,2.7,group);mesh(0x182b36,0,1.2,-.2,1.3,.6,1.3,group);for(const x of [-.95,.95])for(const z of [-.8,.8])mesh(0x13191c,x,.4,z,.4,.65,.65,group);scene.add(group);return group;}
   let sim=new Simulation();
   let overhead=false;
-  const pauseButton=document.querySelector<HTMLButtonElement>('#pause')!;
-  function togglePause(){sim.paused=!sim.paused;pauseButton.textContent=sim.paused?'Resume':'Pause';keys.clear();pointers.clear();}
-  pauseButton.addEventListener('click',togglePause,{signal:events.signal});
-  document.querySelector('#camera')!.addEventListener('click',()=>{overhead=!overhead;},{signal:events.signal});
-  const keys=new Set<string>();const pointers=new Map<number,string>();
-  const active=(key:string)=>keys.has(key)||[...pointers.values()].includes(key);
+  const keys=new Set<string>(),pointers=new Set<number>();
   const opts={signal:events.signal};
-  const allowed=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','ShiftLeft','ShiftRight','KeyB','Escape','KeyP','KeyC']);
-  window.addEventListener('keydown',e=>{if(allowed.has(e.code)){e.preventDefault();if(!e.repeat&&(e.code==='Escape'||e.code==='KeyP'))togglePause();else if(!e.repeat&&e.code==='KeyC')overhead=!overhead;else keys.add(e.code);}},opts);
+  const pauseButton=document.querySelector<HTMLButtonElement>('#pause')!;
+  const action=document.querySelector<HTMLButtonElement>('#action')!;
+  const joystick=document.querySelector<HTMLElement>('#joystick')!;
+  const stick=document.querySelector<HTMLElement>('#stick')!;
+  let stickPointer:number|null=null,stickX=0,stickY=0;
+  let last=performance.now(),accumulator=0,lastHud='';
+  const portrait=()=>window.innerHeight>window.innerWidth;
+  function clearInput(){keys.clear();pointers.clear();stickPointer=null;stickX=stickY=0;stick.style.transform='translate(0px,0px)';}
+  function togglePause(){sim.paused=!sim.paused;pauseButton.textContent=sim.paused?'Resume':'Pause';clearInput();}
+  pauseButton.addEventListener('click',togglePause,opts);
+  document.querySelector('#camera')!.addEventListener('click',()=>{overhead=!overhead;clearInput();},opts);
+  const allowed=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Escape','KeyP','KeyC']);
+  window.addEventListener('keydown',e=>{if(!allowed.has(e.code))return;e.preventDefault();if(!e.repeat&&(e.code==='Escape'||e.code==='KeyP'))togglePause();else if(!e.repeat&&e.code==='KeyC'){overhead=!overhead;clearInput();}else keys.add(e.code);},opts);
   window.addEventListener('keyup',e=>keys.delete(e.code),opts);
-  window.addEventListener('blur',()=>{keys.clear();pointers.clear();},opts);
-  document.querySelectorAll<HTMLButtonElement>('[data-key]').forEach(button=>{
-    button.addEventListener('pointerdown',e=>{e.preventDefault();button.setPointerCapture(e.pointerId);pointers.set(e.pointerId,button.dataset.key!);},opts);
-    for(const type of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(type,e=>pointers.delete((e as PointerEvent).pointerId),opts);
-  });
-  document.querySelector('#restart')!.addEventListener('click',()=>{sim=new Simulation();pauseButton.textContent='Pause';for(const obj of entities.values())scene.remove(obj);entities.clear();keys.clear();pointers.clear();},opts);
-  function resize(){const w=window.innerWidth,h=window.innerHeight;render.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  window.addEventListener('blur',clearInput,opts);
+  function updateStick(e:PointerEvent){const r=joystick.getBoundingClientRect(),radius=r.width*.35;const x=(e.clientX-r.left-r.width/2)/radius,y=(e.clientY-r.top-r.height/2)/radius;const length=Math.max(1,Math.hypot(x,y));stickX=x/length;stickY=y/length;stick.style.transform=`translate(${stickX*radius}px,${stickY*radius}px)`;}
+  joystick.addEventListener('pointerdown',e=>{if(stickPointer!==null)return;e.preventDefault();stickPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);updateStick(e);},opts);
+  joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)updateStick(e);},opts);
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])joystick.addEventListener(type,e=>{if((e as PointerEvent).pointerId===stickPointer){stickPointer=null;stickX=stickY=0;stick.style.transform='translate(0px,0px)';}},opts);
+  action.addEventListener('pointerdown',e=>{e.preventDefault();action.setPointerCapture(e.pointerId);pointers.add(e.pointerId);},opts);
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])action.addEventListener(type,e=>pointers.delete((e as PointerEvent).pointerId),opts);
+  document.querySelector('#restart')!.addEventListener('click',()=>{sim=new Simulation();pauseButton.textContent='Pause';for(const obj of entities.values())scene.remove(obj);entities.clear();clearInput();},opts);
+  function resize(){const w=window.innerWidth,h=window.innerHeight;render.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();clearInput();accumulator=0;last=performance.now();}
   window.addEventListener('resize',resize,opts);resize();
+  document.querySelector('#fullscreen')!.addEventListener('click',async()=>{
+    try{await document.documentElement.requestFullscreen?.();const orientation=screen.orientation as ScreenOrientation & {lock?:(value:string)=>Promise<void>};await orientation.lock?.('landscape');}catch{/* Browser does not support locking; rotation guidance remains visible. */}
+  },opts);
   render.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();fail(new Error('WebGL context lost; reload to resume'));},opts);
   window.addEventListener('pagehide',cleanup,opts);
-  let last=performance.now(),accumulator=0,lastHud='';
-  document.addEventListener('visibilitychange',()=>{last=performance.now();accumulator=0;keys.clear();pointers.clear();},opts);
+  document.addEventListener('visibilitychange',()=>{last=performance.now();accumulator=0;clearInput();},opts);
   function tick(now:number){
     try{
       accumulator+=Math.min((now-last)/1000,.1);last=now;
-      while(accumulator>=STEP){sim.update({throttle:Number(active('KeyW')||active('ArrowUp'))-Number(active('KeyS')||active('ArrowDown')),steer:Number(active('KeyA')||active('ArrowLeft'))-Number(active('KeyD')||active('ArrowRight')),fire:active('Space'),boost:active('ShiftLeft')||active('ShiftRight'),brake:active('KeyB')});accumulator-=STEP;}
+      if(portrait()||document.hidden)accumulator=0;
+      while(accumulator>=STEP){
+        const x=stickPointer!==null?stickX:Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));
+        const y=stickPointer!==null?stickY:Number(keys.has('KeyS')||keys.has('ArrowDown'))-Number(keys.has('KeyW')||keys.has('ArrowUp'));
+        const length=Math.max(1,Math.hypot(x,y)),sx=x/length,sy=y/length;
+        // Convert screen direction to the ground-plane axes for each camera.
+        sim.update({x:overhead?-sx:(-sx+sy)*Math.SQRT1_2,z:overhead?sy:(-sx-sy)*Math.SQRT1_2,fire:keys.has('Space')||pointers.size>0});accumulator-=STEP;
+      }
       const alive=new Set<number>();
       for(const body of [sim.player,...sim.enemies]){alive.add(body.id);let obj=entities.get(body.id);if(!obj){obj=car(body.id===0?0x42e2b3:0xe05c48);entities.set(body.id,obj);}obj.position.set(body.x,0,body.z);obj.rotation.y=body.angle;}
       for(const b of sim.bullets){alive.add(b.id);let obj=entities.get(b.id);if(!obj){obj=mesh(b.enemy?0xff6644:0xffef99,0,0,0,.24,.24,.6);entities.set(b.id,obj);}obj.position.set(b.x,1,b.z);obj.rotation.y=Math.atan2(b.vx,b.vz);}
-      for(const p of sim.pickups){alive.add(p.id);let obj=entities.get(p.id);if(!obj){obj=mesh(0x65ff99,0,0,0,1,1,1);entities.set(p.id,obj);}obj.position.set(p.x,.8+Math.sin(sim.time*3)*.15,p.z);obj.rotation.y=sim.time;}
+      for(const p of sim.pickups){alive.add(p.id);let obj=entities.get(p.id);if(!obj){obj=mesh(p.item==='rocket'?0xffb54b:p.item==='scatter'?0xb48aff:0x65ff99,0,0,0,1.3,1.3,1.3);entities.set(p.id,obj);}obj.position.set(p.x,.8+Math.sin(sim.time*3)*.15,p.z);obj.rotation.y=sim.time;}
       for(const [id,obj]of entities)if(!alive.has(id)){scene.remove(obj);entities.delete(id);}
       const distance=camera.aspect<1?40:29;
       camera.position.set(sim.player.x+(overhead?0:distance*.65),distance*(overhead?1.3:1),sim.player.z-(overhead?.01:distance*.65));camera.lookAt(sim.player.x,0,sim.player.z);
-      const status=`ARMOR ${Math.ceil(sim.player.hp)} / 100 · SCORE ${sim.score} · HOSTILES ${sim.enemies.length} · NITRO ${Math.floor(sim.nitro)}% · SPEED ${Math.round(Math.abs(sim.speed)*8)}`;
+      const status=`ARMOR ${Math.ceil(sim.player.hp)} / 100 · SCORE ${sim.score} · HOSTILES ${sim.enemies.length} · ${sim.player.item?.toUpperCase()??'EMPTY'} ${sim.player.ammo||''}`;
       if(status!==lastHud){hud.textContent=status;lastHud=status;}
-      message.textContent=sim.paused?'PAUSED — Press P / Esc or Resume':sim.player.hp<=0?'WRECKED — Press Restart to return to the yard':'WASD drive · Space fire · Shift nitro · B brake · C camera · P pause';
+      message.textContent=sim.paused?'PAUSED — Press P / Esc or Resume':sim.player.hp<=0?'WRECKED — Press Restart to return to the yard':'Stick to drive · Collect a box · Tap USE / Space · Orange: rockets · Purple: scatter · Green: repair';
+      action.textContent=sim.player.item?`${sim.player.item.toUpperCase()} ${sim.player.ammo}`:'FIND BOX';
+      action.classList.toggle('empty',sim.player.ammo===0);
       render.render(scene,camera);frame=requestAnimationFrame(tick);
     }catch(error){fail(error);}
   }

@@ -19,7 +19,11 @@ Open the Vite URL. For phones on the same network, use your computer's LAN addre
 
 ## Controls
 
-W/S or up/down: forward/reverse. A/D or left/right: steer. Space: fire. Touch devices show a directional pad and a fire button with simultaneous pointer support. Restart resets the match. Green crates repair 25 armor; destroyed enemies earn 100 points. Enemies spawn faster over time, capped at 18. At zero armor, the match stops.
+Play in landscape. Portrait pauses the match and displays rotation guidance. The Enter landscape button requests fullscreen/orientation lock where supported; on iPhones, rotate the phone manually with rotation lock disabled.
+
+Drag the analog stick toward the direction you want to travel. Deflection controls speed; releasing stops the car. There is no separate accelerator or reverse control. Keyboard WASD/arrows are screen-direction alternatives. Space or the single action button uses the item held. C switches cameras, P/Esc pauses, and Restart resets the match.
+
+All cars start unarmed. Orange boxes supply 3 rockets; purple boxes supply 5 scatter volleys; green boxes supply one repair charge (35 armor). Items are stored until used. Emptying a slot lets you collect another box; full inventory leaves boxes on the ground. Repair at full health does not waste the charge. Enemies must also collect weapons. Destroyed enemies earn 100 points. At zero armor, the match stops.
 
 ## Architecture
 
@@ -39,12 +43,6 @@ The supplied workspace had no scaffold, so this is a new implementation authoriz
 
 The included `.github/workflows/pages.yml` validates and publishes `dist` on pushes to `main`. In repository Settings → Pages, choose **GitHub Actions** as the build source. Vite uses relative asset URLs to support a repository subpath.
 
-## Expanded controls
+## Gameplay references
 
-- **Shift**: hold nitro for extra forward speed; fuel recharges when inactive.
-- **B**: brake and turn more sharply.
-- **C / Camera**: switch between angled and overhead views.
-- **P / Esc / Pause**: pause or resume the match.
-- Mobile: Nitro and Brake buttons alongside Fire; Camera and Pause in the header.
-
-Acceleration and coasting are gradual. HUD shows speed (arcade display units) and remaining nitro. See [REFERENCES.md](REFERENCES.md) for the GitHub gameplay comparisons and license review. All additions are original code.
+See [REFERENCES.md](REFERENCES.md) for reference projects and license review. The current landscape, analog steering and box-only item system is original code following the requested control design. Earlier nitro/brake commands have been removed in favor of one stick and one item button.

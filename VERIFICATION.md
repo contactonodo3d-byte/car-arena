@@ -31,3 +31,9 @@ Publication retry: authenticated as `contactonodo3d-byte`, but GitHub rejected b
 ## Driving-controls update
 
 Compared public GitHub gameplay documentation (see REFERENCES.md). No source or assets copied. Added acceleration/coasting, nitro, braking, camera toggle, pause and mobile equivalents. `npm run build`, `npm run lint`, and all 12 deterministic tests passed. Local Chromium at 390×844 exercised boosted driving, pause/resume (HUD remained frozen), camera toggle, pointer brake and restart; no uncaught page errors. Real-device multitouch remains unverified.
+
+## Landscape and box-only controls
+
+Replaced the directional pad with a captured-pointer analog stick, screen-relative heading and analog forward speed. Removed nitro/brake and default guns. All cars acquire limited-use rockets, scatter shots or repair charges from boxes; inventory and action text reflect remaining uses. Portrait freezes gameplay and requests rotation, with best-effort fullscreen orientation lock. Strict checks, production build and 15 deterministic gameplay tests passed. Prior control descriptions above are historical.
+
+Chromium touch emulation at 844×390 passed simultaneous joystick/action touches, stick release, restart, and portrait rotation pause at 390×844, with no uncaught page errors. Landscape screenshot inspected. Physical iOS/Android orientation lock support remains unverified; manual rotation guidance is provided.
