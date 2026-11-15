@@ -34,3 +34,7 @@ Rendering shares geometry and a small material palette; deleted entities release
 ## Implementation notes
 
 The supplied workspace had no scaffold, so this is a new implementation authorized by the user. The core gameplay path is implemented without placeholder functions. Collision uses simple arena-aligned boxes and vehicle circles; enemies pursue directly and can be blocked by containers. There is no pathfinding, audio, persistence, or external backend. See `VERIFICATION.md` for executed checks and known verification limits.
+
+## GitHub Pages
+
+The included `.github/workflows/pages.yml` validates and publishes `dist` on pushes to `main`. In repository Settings → Pages, choose **GitHub Actions** as the build source. Vite uses relative asset URLs to support a repository subpath.

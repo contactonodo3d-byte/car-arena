@@ -25,3 +25,5 @@ This project was built from scratch because the provided workspace contained no 
 Real iOS/Android devices, Safari, sustained GPU/memory profiling, actual multitouch gestures, and WebGL context recovery were not tested. Context loss requires a reload. Browser smoke testing exercised firing but did not assert a browser-rendered kill or pickup collection; these rules were verified in deterministic simulation tests. Enemies use direct pursuit rather than obstacle pathfinding.
 
 GitHub CLI authentication succeeded when retried with network access. The earlier invalid-token diagnosis was caused by sandbox network restrictions.
+
+Publication retry: authenticated as `contactonodo3d-byte`, but GitHub rejected both GraphQL and REST repository creation with `Resource not accessible by integration` (REST HTTP 403). No remote repository or live deployment was created. The local Pages workflow is prepared but has not run on GitHub.
