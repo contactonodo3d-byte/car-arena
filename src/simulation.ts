@@ -1,6 +1,6 @@
 export const STEP = 1 / 60;
 export const LIMIT = 26;
-export interface Input { throttle: number; steer: number; fire: boolean }
+export interface Input { throttle: number; steer: number; fire: boolean; boost?: boolean; brake?: boolean }
 export interface Body { id: number; x: number; z: number; angle: number; hp: number; cooldown: number }
 export interface Bullet { id: number; x: number; z: number; vx: number; vz: number; life: number; enemy: boolean }
 export interface Pickup { id: number; x: number; z: number }
@@ -8,6 +8,7 @@ export const obstacles = [{x:-12,z:-9,w:7,d:4},{x:12,z:9,w:7,d:4},{x:-12,z:12,w:
 export class Simulation {
   player: Body = {id:0,x:0,z:0,angle:0,hp:100,cooldown:0};
   enemies: Body[] = []; bullets: Bullet[] = []; pickups: Pickup[] = [];
+  speed = 0; nitro = 100; paused = false;
   score = 0; time = 0; private nextId = 1; private spawn = 1; private drop = 2;
   private seed: number;
   constructor(seed = 42) { this.seed = seed; }
@@ -24,11 +25,18 @@ export class Simulation {
     this.bullets.push({id:this.nextId++,x:b.x+Math.sin(b.angle)*1.5,z:b.z+Math.cos(b.angle)*1.5,vx:Math.sin(b.angle)*24,vz:Math.cos(b.angle)*24,life:2,enemy});
   }
   update(input:Input,dt=STEP) {
-    if(this.player.hp<=0) return;
+    if(this.player.hp<=0 || this.paused) return;
     this.time+=dt; this.spawn-=dt; this.drop-=dt;
     this.player.cooldown=Math.max(0,this.player.cooldown-dt);
-    this.player.angle+=input.steer*2.8*dt;
-    this.move(this.player,input.throttle*10,dt);
+    const boosting = !!input.boost && input.throttle > 0 && !input.brake && this.nitro > 25 * dt;
+    this.nitro = Math.max(0, Math.min(100, this.nitro + (boosting ? -25 : 12) * dt));
+    const targetSpeed = input.brake ? 0 : input.throttle * (boosting ? 18 : 10);
+    const acceleration = input.brake ? 32 : input.throttle === 0 ? 10 : 20;
+    this.speed += Math.sign(targetSpeed - this.speed) * Math.min(Math.abs(targetSpeed - this.speed), acceleration * dt);
+    this.player.angle += input.steer * (input.brake ? 4.2 : 2.8) * dt;
+    const oldX = this.player.x, oldZ = this.player.z;
+    this.move(this.player,this.speed,dt);
+    if(Math.hypot(this.player.x-oldX,this.player.z-oldZ)<Math.abs(this.speed)*dt*.1) this.speed=0;
     if(input.fire) this.shoot(this.player,false);
     if(this.spawn<=0) {
       this.spawn=Math.max(0.9,3-this.time/90);

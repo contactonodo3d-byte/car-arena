@@ -27,3 +27,7 @@ Real iOS/Android devices, Safari, sustained GPU/memory profiling, actual multito
 GitHub CLI authentication succeeded when retried with network access. The earlier invalid-token diagnosis was caused by sandbox network restrictions.
 
 Publication retry: authenticated as `contactonodo3d-byte`, but GitHub rejected both GraphQL and REST repository creation with `Resource not accessible by integration` (REST HTTP 403). No remote repository or live deployment was created. The local Pages workflow is prepared but has not run on GitHub.
+
+## Driving-controls update
+
+Compared public GitHub gameplay documentation (see REFERENCES.md). No source or assets copied. Added acceleration/coasting, nitro, braking, camera toggle, pause and mobile equivalents. `npm run build`, `npm run lint`, and all 12 deterministic tests passed. Local Chromium at 390×844 exercised boosted driving, pause/resume (HUD remained frozen), camera toggle, pointer brake and restart; no uncaught page errors. Real-device multitouch remains unverified.

@@ -38,3 +38,13 @@ The supplied workspace had no scaffold, so this is a new implementation authoriz
 ## GitHub Pages
 
 The included `.github/workflows/pages.yml` validates and publishes `dist` on pushes to `main`. In repository Settings → Pages, choose **GitHub Actions** as the build source. Vite uses relative asset URLs to support a repository subpath.
+
+## Expanded controls
+
+- **Shift**: hold nitro for extra forward speed; fuel recharges when inactive.
+- **B**: brake and turn more sharply.
+- **C / Camera**: switch between angled and overhead views.
+- **P / Esc / Pause**: pause or resume the match.
+- Mobile: Nitro and Brake buttons alongside Fire; Camera and Pause in the header.
+
+Acceleration and coasting are gradual. HUD shows speed (arcade display units) and remaining nitro. See [REFERENCES.md](REFERENCES.md) for the GitHub gameplay comparisons and license review. All additions are original code.
