@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {Simulation,STEP} from '../src/simulation.ts';
+const idle={throttle:0,steer:0,fire:false};
+test('same seed and inputs yield identical gameplay',()=>{const a=new Simulation(7),b=new Simulation(7);for(let i=0;i<1200;i++){const input={throttle:.4,steer:.5,fire:true};a.update(input);b.update(input);}assert.deepEqual(a,b);});
+test('movement respects arena boundary',()=>{const s=new Simulation();for(let i=0;i<300;i++)s.update({...idle,throttle:1});assert.ok(s.player.z>20&&s.player.z<=25);});
+test('enemies and repair pickups spawn',()=>{const s=new Simulation();for(let i=0;i<180;i++)s.update(idle);assert.ok(s.enemies.length>0);assert.ok(s.pickups.length>0);});
+test('repair collected and health capped',()=>{const s=new Simulation();s.player.hp=90;s.pickups.push({id:99,x:0,z:0});s.update(idle);assert.equal(s.player.hp,100);assert.equal(s.pickups.length,0);});
+test('player bullets kill enemy and award score once',()=>{const s=new Simulation();s.enemies.push({id:99,x:0,z:5,angle:0,hp:40,cooldown:99});for(let i=0;i<50;i++)s.update({...idle,fire:true});assert.equal(s.enemies.length,0);assert.equal(s.score,100);});
+test('enemy bullets damage player; expired shots removed',()=>{const s=new Simulation();s.bullets.push({id:99,x:0,z:0,vx:0,vz:0,enemy:true,life:1});s.update(idle);assert.equal(s.player.hp,92);assert.equal(s.bullets.length,0);});
+test('wreck stops simulation',()=>{const s=new Simulation();s.player.hp=0;s.update({...idle,throttle:1});assert.equal(s.time,0);assert.equal(s.player.z,0);});
+test('obstacles stop vehicles',()=>{const s=new Simulation();s.player.x=-12;s.player.z=-14;for(let i=0;i<40;i++)s.update({...idle,throttle:1},STEP);assert.ok(s.player.z<=-12);});
