@@ -37,3 +37,7 @@ Compared public GitHub gameplay documentation (see REFERENCES.md). No source or 
 Replaced the directional pad with a captured-pointer analog stick, screen-relative heading and analog forward speed. Removed nitro/brake and default guns. All cars acquire limited-use rockets, scatter shots or repair charges from boxes; inventory and action text reflect remaining uses. Portrait freezes gameplay and requests rotation, with best-effort fullscreen orientation lock. Strict checks, production build and 15 deterministic gameplay tests passed. Prior control descriptions above are historical.
 
 Chromium touch emulation at 844×390 passed simultaneous joystick/action touches, stick release, restart, and portrait rotation pause at 390×844, with no uncaught page errors. Landscape screenshot inspected. Physical iOS/Android orientation lock support remains unverified; manual rotation guidance is provided.
+
+## Portrait-browser startup fix
+
+Removed the blocking rotate/fullscreen screen. Landscape playfield now rotates with CSS inside portrait viewports; analog coordinates are inverse-transformed to match. Gameplay starts without orientation-lock permission. Also preserved the renderer on back-forward-cache pagehide events. Production build and all 15 gameplay tests passed. Chromium touch emulation verified immediate startup/enemy spawning at 390×844, joystick direction at portrait and 844×390 landscape, resize and restart, with no uncaught errors. Actual iOS hardware remains untested.

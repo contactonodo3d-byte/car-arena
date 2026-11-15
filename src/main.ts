@@ -57,25 +57,23 @@ try {
   window.addEventListener('keydown',e=>{if(!allowed.has(e.code))return;e.preventDefault();if(!e.repeat&&(e.code==='Escape'||e.code==='KeyP'))togglePause();else if(!e.repeat&&e.code==='KeyC'){overhead=!overhead;clearInput();}else keys.add(e.code);},opts);
   window.addEventListener('keyup',e=>keys.delete(e.code),opts);
   window.addEventListener('blur',clearInput,opts);
-  function updateStick(e:PointerEvent){const r=joystick.getBoundingClientRect(),radius=r.width*.35;const x=(e.clientX-r.left-r.width/2)/radius,y=(e.clientY-r.top-r.height/2)/radius;const length=Math.max(1,Math.hypot(x,y));stickX=x/length;stickY=y/length;stick.style.transform=`translate(${stickX*radius}px,${stickY*radius}px)`;}
+  function updateStick(e:PointerEvent){const r=joystick.getBoundingClientRect(),radius=r.width*.35;const dx=e.clientX-r.left-r.width/2,dy=e.clientY-r.top-r.height/2;const x=(portrait()?dy:dx)/radius,y=(portrait()?-dx:dy)/radius;const length=Math.max(1,Math.hypot(x,y));stickX=x/length;stickY=y/length;stick.style.transform=`translate(${stickX*radius}px,${stickY*radius}px)`;}
   joystick.addEventListener('pointerdown',e=>{if(stickPointer!==null)return;e.preventDefault();stickPointer=e.pointerId;joystick.setPointerCapture(e.pointerId);updateStick(e);},opts);
   joystick.addEventListener('pointermove',e=>{if(e.pointerId===stickPointer)updateStick(e);},opts);
   for(const type of ['pointerup','pointercancel','lostpointercapture'])joystick.addEventListener(type,e=>{if((e as PointerEvent).pointerId===stickPointer){stickPointer=null;stickX=stickY=0;stick.style.transform='translate(0px,0px)';}},opts);
   action.addEventListener('pointerdown',e=>{e.preventDefault();action.setPointerCapture(e.pointerId);pointers.add(e.pointerId);},opts);
   for(const type of ['pointerup','pointercancel','lostpointercapture'])action.addEventListener(type,e=>pointers.delete((e as PointerEvent).pointerId),opts);
   document.querySelector('#restart')!.addEventListener('click',()=>{sim=new Simulation();pauseButton.textContent='Pause';for(const obj of entities.values())scene.remove(obj);entities.clear();clearInput();},opts);
-  function resize(){const w=window.innerWidth,h=window.innerHeight;render.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();clearInput();accumulator=0;last=performance.now();}
+  function resize(){const w=Math.max(window.innerWidth,window.innerHeight),h=Math.min(window.innerWidth,window.innerHeight);app.style.width=`${w}px`;app.style.height=`${h}px`;app.style.transform=portrait()?`translateX(${h}px) rotate(90deg)`:'none';render.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();clearInput();accumulator=0;last=performance.now();}
   window.addEventListener('resize',resize,opts);resize();
-  document.querySelector('#fullscreen')!.addEventListener('click',async()=>{
-    try{await document.documentElement.requestFullscreen?.();const orientation=screen.orientation as ScreenOrientation & {lock?:(value:string)=>Promise<void>};await orientation.lock?.('landscape');}catch{/* Browser does not support locking; rotation guidance remains visible. */}
-  },opts);
   render.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();fail(new Error('WebGL context lost; reload to resume'));},opts);
-  window.addEventListener('pagehide',cleanup,opts);
+  window.addEventListener('pagehide',e=>{if(!e.persisted)cleanup();else clearInput();},opts);
+  window.addEventListener('pageshow',()=>{last=performance.now();accumulator=0;clearInput();},opts);
   document.addEventListener('visibilitychange',()=>{last=performance.now();accumulator=0;clearInput();},opts);
   function tick(now:number){
     try{
       accumulator+=Math.min((now-last)/1000,.1);last=now;
-      if(portrait()||document.hidden)accumulator=0;
+      if(document.hidden)accumulator=0;
       while(accumulator>=STEP){
         const x=stickPointer!==null?stickX:Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'));
         const y=stickPointer!==null?stickY:Number(keys.has('KeyS')||keys.has('ArrowDown'))-Number(keys.has('KeyW')||keys.has('ArrowUp'));

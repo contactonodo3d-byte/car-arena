@@ -19,7 +19,7 @@ Open the Vite URL. For phones on the same network, use your computer's LAN addre
 
 ## Controls
 
-Play in landscape. Portrait pauses the match and displays rotation guidance. The Enter landscape button requests fullscreen/orientation lock where supported; on iPhones, rotate the phone manually with rotation lock disabled.
+The game opens immediately in landscape. In portrait-only browsers, the entire playfield rotates sideways automatically, including touch coordinates. Hold the phone sideways; no fullscreen permission or orientation-lock button is required.
 
 Drag the analog stick toward the direction you want to travel. Deflection controls speed; releasing stops the car. There is no separate accelerator or reverse control. Keyboard WASD/arrows are screen-direction alternatives. Space or the single action button uses the item held. C switches cameras, P/Esc pauses, and Restart resets the match.
 
